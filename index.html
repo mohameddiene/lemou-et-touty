@@ -58,13 +58,13 @@ textarea{min-height:96px}
 <nav id="tabs"></nav>
 <div id="top"></div>
 <main id="app"></main>
-<p class="foot">Vos données sont enregistrées en ligne.</p>
+<p class="foot">Vos données sont enregistrées en ligne. · v4</p>
 <p id="inst"></p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script>
 var MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-var SB=null,U=null,P={},view="auth",mode="in",tab="cot",MS=[],GR=null,MB=[],PR={},PY=[],NW=[],adding=false,joining=false,info="",arm=null,dp=null;
+var AD=null,SB=null,U=null,P={},view="auth",mode="in",tab="cot",MS=[],GR=null,MB=[],PR={},PY=[],NW=[],adding=false,joining=false,info="",arm=null,dp=null;
 function $(s){return document.querySelector(s)}
 function ym(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 var month=ym(new Date());
@@ -105,7 +105,7 @@ async function go(){
   await loadHome();view="home";GR=null;arm=null;render();
 }
 async function loadHome(){
-  var a=await SB.from("profiles").select("full_name,phone").eq("id",U.id).maybeSingle();
+  var a=await SB.from("profiles").select("full_name,phone,is_admin").eq("id",U.id).maybeSingle();
   P=a.data||{full_name:"",phone:""};
   var r=await SB.from("memberships").select("id,role,status,group_id,groups(id,name,amount,invite_code,pay_wave,pay_om)").eq("user_id",U.id).order("created_at");
   MS=r.data||[];
@@ -182,6 +182,20 @@ async function leave(){
   await SB.from("memberships").delete().eq("id",GR.id);await go();
 }
 
+async function openAdmin(){
+  var s=await SB.rpc("admin_stats");
+  if(s.error){info=fr(s.error.message);render();return}
+  var g=await SB.rpc("admin_groups"),t=await SB.from("platform_settings").select("key,value"),st={};
+  (t.data||[]).forEach(function(x){st[x.key]=x.value});
+  AD={s:s.data,g:g.data||[],st:st,gerr:g.error?g.error.message:""};view="admin";render();
+}
+async function saveAdmin(){
+  var f=+$("#af").value;if(!(f>=0))return E("Entrez un montant valide.");
+  var rows=[{key:"fee_per_member",value:String(f)},{key:"admin_wave",value:$("#aw").value.trim()},{key:"admin_om",value:$("#ao").value.trim()}];
+  var r=await SB.from("platform_settings").upsert(rows);
+  if(r.error)return E(fr(r.error.message));
+  await openAdmin();E("Enregistré.");
+}
 function vCot(){
   var g=GR.groups,h='<div class="nav"><button class="ic" onclick="mv(-1)" aria-label="Mois précédent">‹</button><b>'+label(month)+'</b><button class="ic" onclick="mv(1)" aria-label="Mois suivant">›</button></div>';
   if(g.pay_wave||g.pay_om)h+='<div class="note"><b>Où envoyer la cotisation</b><br>'+(g.pay_wave?'Wave : '+esc(g.pay_wave)+' ':'')+(g.pay_om?'· Orange Money : '+esc(g.pay_om):'')+'</div>';
@@ -238,6 +252,13 @@ function render(){
     app.innerHTML=(mode==="up"?'<label>Nom complet</label><input id="fn" autocomplete="name"><label>Téléphone WhatsApp</label><input id="ph" type="tel" autocomplete="tel" placeholder="77 123 45 67">':'')+'<label>Email</label><input id="em" type="email" autocomplete="email"><label>Mot de passe</label><input id="pw" type="password" autocomplete="'+(mode==="in"?"current-password":"new-password")+'"><p class="err" id="err"></p><button class="btn" onclick="'+(mode==="in"?"signIn()":"signUp()")+'">'+(mode==="in"?"Se connecter":"Créer mon compte")+'</button><p class="mut">'+(mode==="in"?'Pas de compte ? <button class="lnk" onclick="setMode(\'up\')">Créer un compte</button>':'Déjà un compte ? <button class="lnk" onclick="setMode(\'in\')">Se connecter</button>')+'</p>';
     install();return;
   }
+  if(view==="admin"){
+    var s=AD.s;
+    back.innerHTML='<p style="margin:18px 0 0"><button class="lnk" onclick="go()">‹ Mes groupes</button></p>';
+    top.innerHTML='<p class="gold">Espace administrateur</p><h1>'+fmt(s.monthly_due)+'</h1><p class="lead">dus chaque mois : '+s.members+' membres dans '+s.groups+' groupes, à '+fmt(s.fee_per_member)+' par membre.</p>';
+    app.innerHTML='<h2>Groupes</h2>'+(AD.g.length?AD.g.map(function(x){return'<div class="row"><div><b>'+esc(x.name)+'</b><br><span class="mut">'+x.members+' membres · créé le '+new Date(x.created_at).toLocaleDateString("fr-FR")+'</span></div><span class="chip">'+fmt(x.monthly_due)+'</span></div>'}).join(""):'<p class="mut">'+(AD.gerr?esc(AD.gerr):"Aucun groupe pour l’instant.")+'</p>')+'<h2>Paramètres de la plateforme</h2><label>Frais par membre et par mois (FCFA)</label><input id="af" type="number" inputmode="numeric" value="'+esc(AD.st.fee_per_member||s.fee_per_member)+'"><label>Mon numéro Wave pour recevoir ces frais</label><input id="aw" type="tel" value="'+esc(AD.st.admin_wave||"")+'"><label>Mon numéro Orange Money</label><input id="ao" type="tel" value="'+esc(AD.st.admin_om||"")+'"><p class="err" id="err"></p><button class="btn" onclick="saveAdmin()">Enregistrer</button><p class="note">Cette page n’est visible que par ton compte. Pour l’instant, le paiement des frais par les groupes se fait à la main.</p>';
+    install();return;
+  }
   if(view==="home"){
     back.innerHTML='<p class="mut" style="margin:18px 0 0">'+esc(P.full_name||U.email)+' · <button class="lnk" onclick="logout()">Se déconnecter</button></p>';
     top.innerHTML='<p class="gold">Bienvenue</p><h1>Mes groupes</h1><p class="lead">Choisissez un groupe pour continuer.</p>';
@@ -250,6 +271,7 @@ function render(){
     if(adding)h+='<h2>Nouveau groupe</h2><label>Nom du groupe</label><input id="gn" placeholder="Ex : Tontine des sœurs"><label>Cotisation par membre et par mois (FCFA)</label><input id="ga" type="number" inputmode="numeric" placeholder="5000"><p class="err" id="err"></p><button class="btn" onclick="createGroup()">Créer le groupe</button>';
     else if(joining)h+='<h2>Rejoindre un groupe</h2><label>Code donné par le responsable</label><input id="jc" placeholder="Ex : A1B2C3" autocapitalize="characters"><p class="err" id="err"></p><button class="btn" onclick="joinGroup()">Envoyer la demande</button>';
     else h+='<button class="btn" onclick="showNew()">Créer un groupe</button> <button class="btn g" onclick="showJoin()">Rejoindre un groupe</button>';
+    if(P.is_admin)h+='<p><button class="btn g" onclick="openAdmin()">Espace administrateur</button></p>';
     app.innerHTML=h;install();return;
   }
   var g=GR.groups,A=actives(),n=A.length,p=A.filter(function(x){var y=pay(x.user_id);return y&&y.status==="confirmed"}).length;
