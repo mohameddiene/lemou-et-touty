@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lémou et Touty</title>
+<meta name="theme-color" content="#f3ece0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{--bg:#f3ece0;--card:#fffdf9;--tx:#2b2418;--mut:#7a6e5c;--pri:#1f3d33;--pt:#fffdf9;--bd:#e4d9c6;--sand:#ece2d0;--gold:#9a722a;--acc:#b98a3e;--bad:#a63a2b;--ok:#2d6a4f;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:14px}
+h1,h2,.brand b{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
+.shell{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--bd);border-radius:28px;padding:22px 22px 26px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand svg{width:48px;height:48px;flex:none;color:var(--pri)}
+.brand b{display:block;font-size:1.25rem;line-height:1.2}
+.eb{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--mut)}
+.gold{color:var(--gold);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;font-weight:800;margin:26px 0 8px}
+h1{font-size:2.3rem;line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 12px;overflow-wrap:anywhere}
+h2{font-size:1.25rem;font-weight:700;margin:24px 0 6px}
+.lead{margin:0 0 6px}
+.mut{color:var(--mut);font-size:.95rem;margin:6px 0}
+.bar{height:8px;background:var(--sand);border-radius:9px;overflow:hidden;margin:14px 0 4px}
+.bar i{display:block;height:100%;background:var(--acc)}
+#tabs{display:flex;gap:8px;overflow-x:auto;margin-top:18px;padding-bottom:2px}
+#tabs button{flex:none;background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:99px;padding:9px 16px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+#tabs button.on{background:var(--pri);color:var(--pt);border-color:var(--pri)}
+.gc{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:20px;padding:14px;margin:10px 0;font:inherit;cursor:pointer}
+.av{flex:none;width:48px;height:48px;border-radius:50%;background:var(--sand);color:var(--pri);display:grid;place-items:center;font-weight:800}
+.gi{flex:1;min-width:0}.gi b{display:block}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--bd)}
+label{display:block;margin:16px 0 8px;font-weight:700}
+input,textarea{width:100%;padding:15px;border:1px solid var(--bd);border-radius:14px;background:#fff;color:var(--tx);font:inherit}
+textarea{min-height:96px}
+.btn{display:inline-block;background:var(--pri);color:var(--pt);border:1px solid var(--pri);border-radius:12px;padding:14px 22px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer;margin-top:16px}
+.btn.g{background:transparent;color:var(--tx);border-color:var(--tx)}
+.btn.s{padding:9px 13px;margin:0 0 0 6px;font-size:.9rem;border-radius:10px}
+.lnk{background:none;border:0;color:var(--pri);font:inherit;font-weight:700;padding:0;cursor:pointer;text-decoration:underline}
+.chip{font-size:.78rem;padding:2px 9px;border-radius:99px;border:1px solid var(--bd);color:var(--mut);font-weight:600;white-space:nowrap}
+.chip.ok{color:var(--ok);border-color:var(--ok)}.chip.bad{color:var(--bad);border-color:var(--bad)}
+.act{display:flex;align-items:center;flex-shrink:0}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.ic{background:var(--card);border:1px solid var(--bd);color:var(--tx);border-radius:12px;width:44px;height:44px;font-size:1.3rem;cursor:pointer}
+.err{color:var(--bad);min-height:1.2em;margin:6px 0 0}
+.foot{color:var(--mut);margin:28px 0 0}
+.note{background:var(--sand);border-radius:14px;padding:12px 14px;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="brand"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="20" cy="26" r="13" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="32" cy="26" r="13" fill="none" stroke="#b98a3e" stroke-width="6"/></svg><div><span class="eb">Associations et tontines</span><b>Lémou et Touty</b></div></div>
+<div id="back"></div>
+<nav id="tabs"></nav>
+<div id="top"></div>
+<main id="app"></main>
+<p class="foot">Version de test · Les données restent sur cet appareil.</p>
+<p id="inst"></p>
+</div>
+<script>
+var KEY="lemou-touty-v2",MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+var S=load(),tab="cot",arm=null,adding=false,dp=null;
+function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return{groups:[],cur:null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function G(){return S.groups.filter(function(g){return g.id===S.cur})[0]}
+function $(s){return document.querySelector(s)}
+function ym(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+var month=ym(new Date());
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function fmt(n){return Number(n).toLocaleString("fr-FR")+" FCFA"}
+function label(m){var p=m.split("-");return MOIS[+p[1]-1]+" "+p[0]}
+function shift(m,d){var p=m.split("-").map(Number);return ym(new Date(p[0],p[1]-1+d,1))}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function ini(n){return esc(n.trim().split(/\s+/).slice(0,2).map(function(w){return w[0]}).join("").toUpperCase())}
+function paid(m,id){var p=G().pays[m];return !!(p&&p[id])}
+function count(m){return G().members.filter(function(x){return paid(m,x.id)}).length}
+function wa(t,m){var d=((m&&m.phone)||"").replace(/\D/g,"");if(d.length===9)d="221"+d;return"https://wa.me/"+d+"?text="+encodeURIComponent(t)}
+function payTxt(){var g=G(),a=[];if(g.pay.wave)a.push("Wave : "+g.pay.wave);if(g.pay.om)a.push("Orange Money : "+g.pay.om);return a.length?" Envoie ta cotisation par "+a.join(" ou ")+".":""}
+function rem(m){var g=G();return"Bonjour "+m.name+", petit rappel : la cotisation de "+label(month)+" ("+fmt(g.amount)+") pour "+g.name+" n’est pas encore réglée."+payTxt()+" Merci !"}
+function rec(m){var g=G();return"Reçu — "+g.name+"\n"+m.name+" a payé "+fmt(g.amount)+" pour "+label(month)+".\nMerci !"}
+
+function showNew(){adding=true;render()}
+function createGroup(){
+  var n=$("#gn").value.trim(),a=+$("#ga").value;
+  if(!n||!(a>0)){$("#ge").textContent="Entrez un nom et un montant supérieur à 0.";return}
+  var g={id:uid(),name:n,amount:a,start:ym(new Date()),members:[],pays:{},tontine:{order:[],done:[]},news:[],pay:{wave:"",om:""}};
+  S.groups.push(g);S.cur=g.id;adding=false;tab="cot";save();render();
+}
+function openG(id){S.cur=id;tab="cot";arm=null;month=ym(new Date());render()}
+function home(){S.cur=null;arm=null;adding=false;render()}
+function setTab(t){tab=t;arm=null;render()}
+function mv(d){month=shift(month,d);render()}
+function tg(id){var g=G();g.pays[month]=g.pays[month]||{};g.pays[month][id]=!g.pays[month][id];save();render()}
+function addM(){
+  var n=$("#mn").value.trim(),p=$("#mp").value.trim();
+  if(!n){$("#me").textContent="Entrez le nom du membre.";return}
+  G().members.push({id:uid(),name:n,phone:p,since:ym(new Date())});save();render();
+}
+function delM(id){
+  if(arm!==id){arm=id;render();return}
+  var g=G();g.members=g.members.filter(function(m){return m.id!==id});arm=null;save();render();
+}
+function syncOrder(){
+  var g=G(),t=g.tontine,ids=g.members.map(function(m){return m.id});
+  t.order=t.order.filter(function(i){return ids.indexOf(i)>-1}).concat(ids.filter(function(i){return t.order.indexOf(i)<0}));
+  t.done=t.done.filter(function(i){return ids.indexOf(i)>-1});
+}
+function shuf(){
+  syncOrder();var t=G().tontine;if(t.done.length)return;
+  for(var i=t.order.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),x=t.order[i];t.order[i]=t.order[j];t.order[j]=x}
+  save();render();
+}
+function recv(id){G().tontine.done.push(id);save();render()}
+function resetT(){G().tontine.done=[];save();render()}
+function addNews(){
+  var t=$("#nt").value.trim(),b=$("#nb").value.trim();
+  if(!t){$("#ne").textContent="Entrez un titre.";return}
+  G().news.unshift({id:uid(),title:t,body:b,date:new Date().toLocaleDateString("fr-FR")});save();render();
+}
+function delNews(id){var g=G();g.news=g.news.filter(function(n){return n.id!==id});save();render()}
+function savePay(){var g=G();g.pay.wave=$("#pw").value.trim();g.pay.om=$("#po").value.trim();save();$("#pe").textContent="Enregistré."}
+function delG(){
+  if(arm!=="g"){arm="g";render();return}
+  S.groups=S.groups.filter(function(g){return g.id!==S.cur});home();save();
+}
+function cp(t){try{navigator.clipboard.writeText(t)}catch(e){}}
+
+function months(){var g=G(),a=[],m=g.start,now=ym(new Date()),k=0;while(m<=now&&k++<120){a.push(m);m=shift(m,1)}return a}
+function vCot(){
+  var g=G();
+  if(!g.members.length)return'<p class="mut">Ajoutez d’abord des membres dans l’onglet Membres.</p>';
+  var h='<div class="nav"><button class="ic" onclick="mv(-1)" aria-label="Mois précédent">‹</button><b>'+label(month)+'</b><button class="ic" onclick="mv(1)" aria-label="Mois suivant">›</button></div>';
+  if(g.pay.wave||g.pay.om)h+='<div class="note"><b>Où envoyer la cotisation</b><br>'+(g.pay.wave?'Wave : '+esc(g.pay.wave)+' ':'')+(g.pay.om?'· Orange Money : '+esc(g.pay.om):'')+'</div>';
+  return h+g.members.map(function(m){
+    var ok=paid(month,m.id);
+    return'<div class="row"><div><b>'+esc(m.name)+'</b><br><span class="chip '+(ok?"ok":"bad")+'">'+(ok?"Payé":"Impayé")+'</span></div><div class="act">'+
+    (ok?'<a class="btn s g" target="_blank" rel="noopener" href="'+wa(rec(m),m)+'">Reçu</a><button class="btn s g" onclick="tg(\''+m.id+'\')">Annuler</button>'
+       :'<a class="btn s g" target="_blank" rel="noopener" href="'+wa(rem(m),m)+'">Rappel</a><button class="btn s" onclick="tg(\''+m.id+'\')">Marquer payé</button>')+'</div></div>';
+  }).join("");
+}
+function vMem(){
+  var g=G(),h='<label>Nom</label><input id="mn" placeholder="Ex : Fatou Diop"><label>Téléphone WhatsApp (facultatif)</label><input id="mp" type="tel" inputmode="tel" placeholder="77 123 45 67"><p class="err" id="me"></p><button class="btn" onclick="addM()">Ajouter le membre</button><h2>Membres ('+g.members.length+')</h2>';
+  if(!g.members.length)h+='<p class="mut">Aucun membre pour l’instant.</p>';
+  return h+g.members.map(function(m){
+    return'<div class="row"><div><b>'+esc(m.name)+'</b><br><span class="mut">'+esc(m.phone||"Pas de numéro")+'</span></div><button class="btn s g" onclick="delM(\''+m.id+'\')">'+(arm===m.id?"Confirmer":"Retirer")+'</button></div>';
+  }).join("");
+}
+function vTon(){
+  var g=G(),n=g.members.length;
+  if(n<2)return'<p class="mut">Ajoutez au moins 2 membres pour lancer une tontine.</p>';
+  syncOrder();
+  var t=g.tontine,cur=t.order.filter(function(i){return t.done.indexOf(i)<0})[0];
+  function nm(id){return esc(g.members.filter(function(m){return m.id===id})[0].name)}
+  var h='<p class="mut">Cagnotte par tour : <b>'+fmt(n*g.amount)+'</b></p>';
+  h+=cur?'<p>Tour en cours : <b>'+nm(cur)+'</b></p><button class="btn" onclick="recv(\''+cur+'\')">Marquer comme reçu</button> ':'<p><b>Cycle terminé.</b></p><button class="btn" onclick="resetT()">Nouveau cycle</button> ';
+  if(!t.done.length)h+='<button class="btn g" onclick="shuf()">Tirer l’ordre au sort</button>';
+  return h+'<h2>Ordre des tours</h2>'+t.order.map(function(id,i){
+    var d=t.done.indexOf(id)>-1;
+    return'<div class="row"><span>'+(i+1)+'. '+nm(id)+'</span><span class="chip '+(d?"ok":"")+'">'+(d?"A reçu":id===cur?"En cours":"En attente")+'</span></div>';
+  }).join("");
+}
+function vNews(){
+  var g=G(),h='<label>Titre</label><input id="nt" placeholder="Ex : Réunion samedi"><label>Message</label><textarea id="nb" placeholder="Votre annonce"></textarea><p class="err" id="ne"></p><button class="btn" onclick="addNews()">Publier l’annonce</button><h2>Annonces</h2>';
+  if(!g.news.length)h+='<p class="mut">Aucune annonce pour l’instant.</p>';
+  return h+g.news.map(function(n){
+    return'<div class="row"><div><b>'+esc(n.title)+'</b><br><span class="mut">'+n.date+(n.body?' · '+esc(n.body):'')+'</span></div><div class="act"><a class="btn s g" target="_blank" rel="noopener" href="'+wa(g.name+" — "+n.title+(n.body?"\n"+n.body:""),null)+'">Partager</a><button class="btn s g" onclick="delNews(\''+n.id+'\')">×</button></div></div>';
+  }).join("");
+}
+function vBil(){
+  var g=G(),ms=months(),tot=0;
+  ms.forEach(function(m){tot+=count(m)*g.amount});
+  var h='<p class="mut">Total collecté depuis le début : <b>'+fmt(tot)+'</b></p><h2>Impayés</h2>';
+  var late=g.members.map(function(x){return{x:x,k:ms.filter(function(m){return m>=x.since&&!paid(m,x.id)}).length}}).filter(function(r){return r.k>0});
+  h+=late.length?late.map(function(r){return'<div class="row"><b>'+esc(r.x.name)+'</b><span class="chip bad">'+r.k+' mois · '+fmt(r.k*g.amount)+'</span></div>'}).join(""):'<p class="mut">Aucun impayé.</p>';
+  return h+'<h2>Derniers mois</h2>'+ms.slice(-6).reverse().map(function(m){return'<div class="row"><span>'+label(m)+'</span><b>'+count(m)+'/'+g.members.length+' · '+fmt(count(m)*g.amount)+'</b></div>'}).join("");
+}
+function vSet(){
+  var g=G();
+  return'<label>Numéro Wave pour recevoir les cotisations</label><input id="pw" type="tel" value="'+esc(g.pay.wave)+'" placeholder="77 123 45 67"><label>Numéro Orange Money</label><input id="po" type="tel" value="'+esc(g.pay.om)+'" placeholder="78 123 45 67"><p class="err" id="pe"></p><button class="btn" onclick="savePay()">Enregistrer</button><p class="note">Ces numéros apparaissent dans les rappels WhatsApp. Le paiement par carte et la confirmation automatique arrivent avec la connexion en ligne.</p><button class="btn g" onclick="delG()">'+(arm==="g"?"Confirmer : supprimer le groupe":"Supprimer ce groupe")+'</button>';
+}
+function install(){
+  var el=$("#inst");
+  if(window.matchMedia&&matchMedia("(display-mode: standalone)").matches){el.innerHTML="";return}
+  el.innerHTML='<button class="lnk" onclick="doInst()">Installer l’app</button><span class="mut" id="ih"></span>';
+}
+function doInst(){
+  if(dp){dp.prompt();dp=null}else $("#ih").textContent=" Android : menu ⋮ puis Installer l’application. iPhone : Partager puis Sur l’écran d’accueil."
+}
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();dp=e});
+function render(){
+  var app=$("#app"),tabs=$("#tabs"),top=$("#top"),back=$("#back");
+  if(!S.cur||!G()){
+    S.cur=null;back.innerHTML="";tabs.style.display="none";
+    top.innerHTML='<p class="gold">Bienvenue</p><h1>Mes groupes</h1><p class="lead">Choisissez un groupe pour continuer.</p>';
+    var h=S.groups.map(function(g){return'<button class="gc" onclick="openG(\''+g.id+'\')"><span class="av">'+ini(g.name)+'</span><span class="gi"><b>'+esc(g.name)+'</b><span class="mut">'+g.members.length+' membres · '+fmt(g.amount)+' / mois</span></span><span class="chip ok">Responsable</span></button>'}).join("");
+    if(!S.groups.length)h+='<p class="mut">Vous n’avez pas encore de groupe.</p>';
+    h+=adding?'<h2>Nouveau groupe</h2><label>Nom du groupe</label><input id="gn" placeholder="Ex : Tontine des sœurs"><label>Cotisation par membre et par mois (FCFA)</label><input id="ga" type="number" inputmode="numeric" placeholder="5000"><p class="err" id="ge"></p><button class="btn" onclick="createGroup()">Créer le groupe</button>':'<button class="btn" onclick="showNew()">Créer un groupe</button>';
+    app.innerHTML=h+'<p class="mut">Rejoindre un groupe avec un code arrivera avec la connexion en ligne.</p>';
+    install();return;
+  }
+  var g=G(),n=g.members.length,p=count(month);
+  back.innerHTML='<p style="margin:18px 0 0"><button class="lnk" onclick="home()">‹ Mes groupes</button></p>';
+  top.innerHTML='<p class="gold">'+esc(g.name)+' · '+label(month)+'</p><h1>'+fmt(p*g.amount)+'</h1><p class="lead">'+p+' sur '+n+' ont payé · reste '+fmt((n-p)*g.amount)+'</p><div class="bar"><i style="width:'+(n?Math.round(p/n*100):0)+'%"></i></div>';
+  tabs.style.display="flex";
+  tabs.innerHTML=[["cot","Cotisations"],["mem","Membres"],["ton","Tontine"],["news","Annonces"],["bil","Bilan"],["set","Réglages"]].map(function(t){
+    return'<button class="'+(tab===t[0]?"on":"")+'" onclick="setTab(\''+t[0]+'\')">'+t[1]+'</button>';
+  }).join("");
+  app.innerHTML={cot:vCot,mem:vMem,ton:vTon,news:vNews,bil:vBil,set:vSet}[tab]();
+  install();
+}
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
+render();
+</script>
+</body>
+</html>
