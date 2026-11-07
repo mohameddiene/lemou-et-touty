@@ -58,13 +58,13 @@ textarea{min-height:96px}
 <nav id="tabs"></nav>
 <div id="top"></div>
 <main id="app"></main>
-<p class="foot">Vos données sont enregistrées en ligne. · v4</p>
+<p class="foot">Vos données sont enregistrées en ligne. · v6</p>
 <p id="inst"></p>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script>
 var MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-var AD=null,SB=null,U=null,P={},view="auth",mode="in",tab="cot",MS=[],GR=null,MB=[],PR={},PY=[],NW=[],adding=false,joining=false,info="",arm=null,dp=null;
+var SUB=null,AD=null,SB=null,U=null,P={},view="auth",mode="in",tab="cot",MS=[],GR=null,MB=[],PR={},PY=[],NW=[],adding=false,joining=false,info="",arm=null,dp=null;
 function $(s){return document.querySelector(s)}
 function ym(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
 var month=ym(new Date());
@@ -107,12 +107,12 @@ async function go(){
 async function loadHome(){
   var a=await SB.from("profiles").select("full_name,phone,is_admin").eq("id",U.id).maybeSingle();
   P=a.data||{full_name:"",phone:""};
-  var r=await SB.from("memberships").select("id,role,status,group_id,groups(id,name,amount,invite_code,pay_wave,pay_om)").eq("user_id",U.id).order("created_at");
+  var r=await SB.from("memberships").select("id,role,status,group_id,groups(id,name,amount,invite_code,pay_wave,pay_om,paid_until)").eq("user_id",U.id).order("created_at");
   MS=r.data||[];
 }
 async function openG(id){
   GR=MS.filter(function(m){return m.group_id===id})[0];tab="cot";arm=null;month=ym(new Date());
-  await loadGroup();view="group";render();
+  await loadGroup();if(!active(GR.groups))await loadSub();view="group";render();
 }
 async function loadGroup(){
   var id=GR.groups.id;
@@ -182,16 +182,63 @@ async function leave(){
   await SB.from("memberships").delete().eq("id",GR.id);await go();
 }
 
+async function tok(){var q=await SB.auth.getSession();return q.data.session?q.data.session.access_token:""}
+async function api(body){
+  var t=await tok();
+  var r=await fetch("/api/saspay",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+t},body:JSON.stringify(body)});
+  var d=await r.json().catch(function(){return{}});
+  return{ok:r.ok,d:d};
+}
+async function payNow(){
+  E("Création du paiement…");
+  try{
+    var r=await api({action:"create",group_id:GR.groups.id});
+    if(!r.ok)return E(r.d.error||"Le paiement n’a pas pu être créé.");
+    try{sessionStorage.setItem("pg",GR.groups.id)}catch(e){}
+    location.href=r.d.url;
+  }catch(e){E("Connexion impossible. Réessayez.")}
+}
+async function recheck(){
+  var id=GR.group_id,gid=GR.groups.id;
+  try{await api({action:"check",group_id:gid})}catch(e){}
+  await loadHome();await openG(id);
+}
+async function afterPay(){
+  var gid="";try{gid=sessionStorage.getItem("pg")||""}catch(e){}
+  if(!gid||!U||!MS.some(function(x){return x.group_id===gid}))return;
+  for(var i=0;i<12;i++){
+    try{await api({action:"check",group_id:gid})}catch(e){}
+    await loadHome();
+    var m=MS.filter(function(x){return x.group_id===gid})[0];
+    if(m&&m.groups&&active(m.groups)){await openG(gid);break}
+    if(i===0)await openG(gid);
+    if(view!=="group")break;
+    await new Promise(function(r){setTimeout(r,4000)});
+  }
+  try{history.replaceState(null,"",location.pathname)}catch(e){}
+}
+function active(g){return g.paid_until==="infinity"||!!(g.paid_until&&g.paid_until>=new Date().toISOString().slice(0,10))}
+async function loadSub(){
+  var i=await SB.rpc("platform_payment_info"),q=await SB.from("subscription_payments").select("id").eq("group_id",GR.groups.id).eq("status","pending");
+  SUB={info:i.data||{fee:2000,wave:"",om:""},pend:(q.data||[]).length>0};
+}
+async function paySub(){
+  var r=await SB.from("subscription_payments").insert({group_id:GR.groups.id,amount:SUB.info.fee,months:1,method:$("#sm").value,reference:$("#sr").value.trim()});
+  if(r.error)return E(fr(r.error.message));
+  await loadSub();render();
+}
+async function adminConfirm(id){await SB.rpc("admin_confirm_subscription",{pid:id});await openAdmin()}
+async function adminReject(id){await SB.from("subscription_payments").delete().eq("id",id);await openAdmin()}
 async function openAdmin(){
   var s=await SB.rpc("admin_stats");
   if(s.error){info=fr(s.error.message);render();return}
-  var g=await SB.rpc("admin_groups"),t=await SB.from("platform_settings").select("key,value"),st={};
+  var pd=await SB.rpc("admin_pending_subs"),g=await SB.rpc("admin_groups"),t=await SB.from("platform_settings").select("key,value"),st={};
   (t.data||[]).forEach(function(x){st[x.key]=x.value});
-  AD={s:s.data,g:g.data||[],st:st,gerr:g.error?g.error.message:""};view="admin";render();
+  AD={pd:pd.data||[],s:s.data,g:g.data||[],st:st,gerr:g.error?g.error.message:""};view="admin";render();
 }
 async function saveAdmin(){
   var f=+$("#af").value;if(!(f>=0))return E("Entrez un montant valide.");
-  var rows=[{key:"fee_per_member",value:String(f)},{key:"admin_wave",value:$("#aw").value.trim()},{key:"admin_om",value:$("#ao").value.trim()}];
+  var rows=[{key:"fee_per_group",value:String(f)},{key:"admin_wave",value:$("#aw").value.trim()},{key:"admin_om",value:$("#ao").value.trim()}];
   var r=await SB.from("platform_settings").upsert(rows);
   if(r.error)return E(fr(r.error.message));
   await openAdmin();E("Enregistré.");
@@ -233,7 +280,7 @@ function vSet(){
   var g=GR.groups;
   if(!mgr())return'<p class="mut">Vous êtes membre de ce groupe.</p><button class="btn g" onclick="leave()">'+(arm==="l"?"Confirmer : quitter le groupe":"Quitter le groupe")+'</button>';
   var link=location.href.split("#")[0].split("?")[0];
-  return'<h2>Inviter des membres</h2><p class="mut">Code du groupe</p><div class="code">'+esc(g.invite_code)+'</div><a class="btn g" target="_blank" rel="noopener" href="'+wa("Rejoins « "+g.name+" » sur Lémou et Touty. Crée ton compte puis entre le code "+g.invite_code+" : "+link,"")+'">Partager sur WhatsApp</a><button class="btn g" onclick="cp(\''+esc(g.invite_code)+'\')">Copier le code</button>'+
+  return'<h2>Abonnement</h2><p class="mut">'+(g.paid_until==="infinity"?"Offert":"Actif jusqu’au "+new Date(g.paid_until).toLocaleDateString("fr-FR"))+'</p><h2>Inviter des membres</h2><p class="mut">Code du groupe</p><div class="code">'+esc(g.invite_code)+'</div><a class="btn g" target="_blank" rel="noopener" href="'+wa("Rejoins « "+g.name+" » sur Lémou et Touty. Crée ton compte puis entre le code "+g.invite_code+" : "+link,"")+'">Partager sur WhatsApp</a><button class="btn g" onclick="cp(\''+esc(g.invite_code)+'\')">Copier le code</button>'+
   '<h2>Paramètres</h2><label>Cotisation par membre et par mois (FCFA)</label><input id="sa" type="number" inputmode="numeric" value="'+g.amount+'"><label>Numéro Wave pour recevoir les cotisations</label><input id="pw" type="tel" value="'+esc(g.pay_wave)+'" placeholder="77 123 45 67"><label>Numéro Orange Money</label><input id="po" type="tel" value="'+esc(g.pay_om)+'" placeholder="78 123 45 67"><p class="err" id="err"></p><button class="btn" onclick="saveSet()">Enregistrer</button><p class="note">Le paiement par carte et la confirmation automatique arrivent plus tard.</p><button class="btn g" onclick="delG()">'+(arm==="g"?"Confirmer : supprimer le groupe":"Supprimer ce groupe")+'</button>';
 }
 function install(){
@@ -255,8 +302,8 @@ function render(){
   if(view==="admin"){
     var s=AD.s;
     back.innerHTML='<p style="margin:18px 0 0"><button class="lnk" onclick="go()">‹ Mes groupes</button></p>';
-    top.innerHTML='<p class="gold">Espace administrateur</p><h1>'+fmt(s.monthly_due)+'</h1><p class="lead">dus chaque mois : '+s.members+' membres dans '+s.groups+' groupes, à '+fmt(s.fee_per_member)+' par membre.</p>';
-    app.innerHTML='<h2>Groupes</h2>'+(AD.g.length?AD.g.map(function(x){return'<div class="row"><div><b>'+esc(x.name)+'</b><br><span class="mut">'+x.members+' membres · créé le '+new Date(x.created_at).toLocaleDateString("fr-FR")+'</span></div><span class="chip">'+fmt(x.monthly_due)+'</span></div>'}).join(""):'<p class="mut">'+(AD.gerr?esc(AD.gerr):"Aucun groupe pour l’instant.")+'</p>')+'<h2>Paramètres de la plateforme</h2><label>Frais par membre et par mois (FCFA)</label><input id="af" type="number" inputmode="numeric" value="'+esc(AD.st.fee_per_member||s.fee_per_member)+'"><label>Mon numéro Wave pour recevoir ces frais</label><input id="aw" type="tel" value="'+esc(AD.st.admin_wave||"")+'"><label>Mon numéro Orange Money</label><input id="ao" type="tel" value="'+esc(AD.st.admin_om||"")+'"><p class="err" id="err"></p><button class="btn" onclick="saveAdmin()">Enregistrer</button><p class="note">Cette page n’est visible que par ton compte. Pour l’instant, le paiement des frais par les groupes se fait à la main.</p>';
+    top.innerHTML='<p class="gold">Espace administrateur</p><h1>'+fmt(s.monthly_due)+'</h1><p class="lead">dus chaque mois : '+s.paying_groups+' groupes payants sur '+s.groups+', à '+fmt(s.fee_per_group)+' par groupe.</p>';
+    app.innerHTML='<h2>Abonnements à confirmer ('+AD.pd.length+')</h2>'+(AD.pd.length?AD.pd.map(function(x){return'<div class="row"><div><b>'+esc(x.group_name)+'</b><br><span class="mut">'+fmt(x.amount)+' · '+esc(x.method)+(x.reference?' · '+esc(x.reference):'')+'</span></div><div class="act"><button class="btn s g" onclick="adminReject(\''+x.id+'\')">Refuser</button><button class="btn s" onclick="adminConfirm(\''+x.id+'\')">Confirmer</button></div></div>'}).join(""):'<p class="mut">Aucun paiement en attente.</p>')+'<h2>Groupes</h2>'+(AD.g.length?AD.g.map(function(x){return'<div class="row"><div><b>'+esc(x.name)+'</b><br><span class="mut">'+x.members+' membres · créé le '+new Date(x.created_at).toLocaleDateString("fr-FR")+'</span></div><span class="chip">'+(x.monthly_due>0?fmt(x.monthly_due):"Gratuit")+'</span></div>'}).join(""):'<p class="mut">'+(AD.gerr?esc(AD.gerr):"Aucun groupe pour l’instant.")+'</p>')+'<h2>Paramètres de la plateforme</h2><label>Frais par groupe et par mois (FCFA)</label><input id="af" type="number" inputmode="numeric" value="'+esc(AD.st.fee_per_group||s.fee_per_group)+'"><label>Mon numéro Wave (affiché aux responsables pour l’abonnement)</label><input id="aw" type="tel" value="'+esc(AD.st.admin_wave||"")+'"><label>Mon numéro Orange Money</label><input id="ao" type="tel" value="'+esc(AD.st.admin_om||"")+'"><p class="err" id="err"></p><button class="btn" onclick="saveAdmin()">Enregistrer</button><p class="note">Cette page n’est visible que par ton compte. Les responsables t’envoient l’abonnement par Wave ou Orange Money ; tu le confirmes ici pour activer leur groupe.</p>';
     install();return;
   }
   if(view==="home"){
@@ -276,6 +323,13 @@ function render(){
   }
   var g=GR.groups,A=actives(),n=A.length,p=A.filter(function(x){var y=pay(x.user_id);return y&&y.status==="confirmed"}).length;
   back.innerHTML='<p style="margin:18px 0 0"><button class="lnk" onclick="go()">‹ Mes groupes</button></p>';
+  if(!active(g)){
+    if(!mgr()){top.innerHTML='<p class="gold">'+esc(g.name)+'</p><h1>Groupe suspendu</h1><p class="lead">Le responsable doit régler l’abonnement pour réactiver ce groupe.</p>';app.innerHTML="";install();return}
+    var i=SUB.info;
+    top.innerHTML='<p class="gold">Abonnement</p><h1>Activez votre groupe</h1><p class="lead">'+esc(g.name)+' : '+fmt(i.fee)+' par mois pour utiliser toutes les fonctions.</p>';
+    app.innerHTML=(SUB.pend?'<div class="note">Un paiement est en cours de vérification. Si vous venez de payer, patientez quelques secondes puis appuyez sur Vérifier.</div><button class="btn g" onclick="recheck()">Vérifier mon paiement</button>':'')+'<p class="mut">Vous choisirez votre moyen de paiement sur la page sécurisée de SasPay.</p><p class="err" id="err"></p><button class="btn" onclick="payNow()">Payer '+fmt(i.fee)+'</button>';
+    install();return;
+  }
   top.innerHTML=mgr()?'<p class="gold">'+esc(g.name)+' · '+label(month)+'</p><h1>'+fmt(p*g.amount)+'</h1><p class="lead">'+p+' sur '+n+' ont payé · reste '+fmt((n-p)*g.amount)+'</p><div class="bar"><i style="width:'+(n?Math.round(p/n*100):0)+'%"></i></div>'
     :'<p class="gold">'+esc(g.name)+' · '+label(month)+'</p><h1>'+fmt(g.amount)+'</h1><p class="lead">Cotisation mensuelle</p>';
   var T=mgr()?[["cot","Cotisations"],["mem","Membres"],["news","Annonces"],["set","Réglages"]]:[["cot","Cotisation"],["news","Annonces"],["set","Groupe"]];
@@ -288,7 +342,8 @@ async function boot(){
   if(!window.supabase){$("#app").innerHTML='<p class="err">Impossible de charger le service en ligne. Vérifiez votre connexion et rechargez la page.</p>';return}
   SB=window.supabase.createClient("https://fyqyzzgygsstmqvnasps.supabase.co","sb_publishable_ex-1Mrg3qfgwAbaSeFwCQQ_3G2Uq8p4");
   try{var r=await SB.auth.getSession();U=r.data.session?r.data.session.user:null}catch(e){U=null}
-  go();
+  await go();
+  if(/paye=1/.test(location.search))afterPay();
 }
 try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
 boot();
