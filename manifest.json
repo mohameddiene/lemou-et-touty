@@ -1,1 +1,1 @@
-{"name":"Lémou et Touty","short_name":"Lémou et Touty","start_url":"/","display":"standalone","background_color":"#0b1f4b","theme_color":"#0b1f4b","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
+{"name":"Lémou et Touty","short_name":"Lémou et Touty","start_url":"/","display":"standalone","background_color":"#0b1f4b","theme_color":"#0b1f4b","icons":[{"src":"logo-192.png","sizes":"192x192","type":"image/png"},{"src":"logo-512.png","sizes":"512x512","type":"image/png","purpose":"any"}]}
