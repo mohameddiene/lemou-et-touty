@@ -30,7 +30,7 @@ th,td{padding:8px;border-bottom:1px solid var(--ln);text-align:left}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 /* ===== RÉGLAGES (un seul endroit) ===== */
-const CFG={url:"COLLE_ICI_PROJECT_URL",key:"COLLE_ICI_ANON_KEY",name:"Lémou et Touty"};
+const CFG={url:"https://fyqyzzgygsstmqvnasps.supabase.co",key:"sb_publishable_ex-1Mrg3qfgwAbaSeFwCQQ_3G2Uq8p4",name:"Lémou et Touty"};
 /* ====================================== */
 const sb=supabase.createClient(CFG.url,CFG.key),$=s=>document.querySelector(s),app=$("#app");
 let me=null,view="home",gid=null,tab="ann",mo=new Date().toISOString().slice(0,7);
