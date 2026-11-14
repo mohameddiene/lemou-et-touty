@@ -1,0 +1,88 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1f4b"><link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="icon.svg">
+<title>Lémou et Touty</title>
+<style>
+:root{--bg:#0b1f4b;--gold:#d4a537;--ink:#14213d;--mu:#6b7280;--ln:#e8e4d8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{max-width:980px;margin:auto;padding:calc(env(safe-area-inset-top) + 16px) 20px 14px;display:flex;gap:14px;align-items:center;color:#fff}
+header b{font:700 24px Georgia,serif;color:var(--gold);flex:1}
+#ios{max-width:980px;margin:0 auto 8px;padding:0 20px;color:#fff;font-size:14px}
+main{background:#fff;border-radius:28px;max-width:980px;margin:0 auto 96px;padding:22px;min-height:60vh}
+h2{margin:.2em 0 .6em}h3{margin:1.4em 0 .5em}
+input,textarea{width:100%;padding:12px 14px;margin:0 0 10px;border:1px solid var(--ln);border-radius:14px;font:inherit}
+button{background:var(--bg);color:#fff;border:0;border-radius:14px;padding:12px 18px;font:inherit;cursor:pointer}
+button.alt{background:#eef0f6;color:var(--bg)}button.ok{background:var(--gold);color:var(--bg)}button.red{background:#b42318;margin-top:28px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--ln)}
+.card{border:1px solid var(--ln);border-radius:18px;padding:14px;margin:12px 0}
+.mu{color:var(--mu)}a{color:var(--bg);font-weight:600;cursor:pointer}a.del{color:#b42318}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin:14px 0}.tabs button{background:#eef0f6;color:var(--bg);white-space:nowrap}.tabs .on{background:var(--gold)}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px;display:block;overflow-x:auto}
+th,td{padding:8px;border-bottom:1px solid var(--ln);text-align:left}
+#nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:#fff;padding:12px 0 calc(env(safe-area-inset-bottom) + 12px);border-top:1px solid var(--ln);z-index:5}
+@media(min-width:800px){#nav{position:static;background:none;border:0;padding:0;gap:18px}#nav a{color:#fff}}
+</style></head><body>
+<header><b id="nm"></b><span id="who"></span><button id="inst" class="ok" hidden>Installer l’app</button><nav id="nav"></nav></header>
+<p id="ios" hidden>iPhone : ouvre dans Safari, touche « Partager », puis « Sur l’écran d’accueil ».</p>
+<main id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== RÉGLAGES (un seul endroit) ===== */
+const CFG={url:"COLLE_ICI_PROJECT_URL",key:"COLLE_ICI_ANON_KEY",name:"Lémou et Touty"};
+/* ====================================== */
+const sb=supabase.createClient(CFG.url,CFG.key),$=s=>document.querySelector(s),app=$("#app");
+let me=null,view="home",gid=null,tab="ann",mo=new Date().toISOString().slice(0,7);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const run=async p=>{const{data,error}=await p;if(error){alert(error.message);return null}return data??true};
+const isA=()=>me&&me.role!="user",go=(v,g)=>{view=v;if(g){gid=g;tab="ann"}render()};
+async function boot(){const{data:{session}}=await sb.auth.getSession();
+ if(!session){me=null;$("#nav").innerHTML="";$("#who").textContent="";return authView()}
+ me=await run(sb.from("profiles").select("*").eq("id",session.user.id).single());render()}
+function authView(){app.innerHTML=`<h2>Connexion</h2><input id="e" type="email" placeholder="E-mail"><input id="p" type="password" placeholder="Mot de passe"><button id="li">Se connecter</button><h3>Nouveau ici ?</h3><input id="n" placeholder="Nom complet"><button class="alt" id="su">Créer un compte</button>`;
+ $("#li").onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:$("#e").value,password:$("#p").value});error?alert(error.message):boot()};
+ $("#su").onclick=async()=>{const{error}=await sb.auth.signUp({email:$("#e").value,password:$("#p").value,options:{data:{full_name:$("#n").value}}});error?alert(error.message):boot()}}
+function render(){if(!me)return;$("#who").textContent=me.full_name||me.email;
+ $("#nav").innerHTML=`<a onclick="go('home')">Groupes</a>${isA()?`<a onclick="go('admin')">Administration</a>`:""}<a onclick="sb.auth.signOut().then(boot)">Déconnexion</a>`;
+ ({home,group,admin})[view]()}
+async function home(){const gs=await run(sb.from("group_members").select("status,groups(id,name,owner_id)").eq("user_id",me.id))||[];
+ app.innerHTML=`<h2>Mes groupes</h2>${(gs===true?[]:gs).filter(m=>m.groups).map(m=>`<div class="row" ${m.status=="active"?`onclick="go('group','${m.groups.id}')"`:""}><b>${esc(m.groups.name)}</b><span class="mu">${m.status=="active"?(m.groups.owner_id==me.id?"Responsable":"Membre"):"Demande en attente"}</span></div>`).join("")||`<p class="mu">Aucun groupe. Crée le tien ou rejoins-en un avec un code.</p>`}
+<h3>Créer un groupe</h3><input id="gn" placeholder="Nom du groupe"><input id="gd" placeholder="Description"><button id="gc">Créer un groupe</button>
+<h3>Rejoindre un groupe</h3><input id="gk" placeholder="Code du groupe"><button class="alt" id="gj">Envoyer la demande</button>`;
+ $("#gc").onclick=async()=>{const id=await run(sb.rpc("create_group",{p_name:$("#gn").value,p_desc:$("#gd").value}));if(id)go("group",id)};
+ $("#gj").onclick=async()=>{if(await run(sb.rpc("join_group",{p_code:$("#gk").value}))){alert("Demande envoyée au responsable.");home()}}}
+async function group(){const g=await run(sb.from("groups").select("*").eq("id",gid).single());if(!g)return go("home");
+ const own=g.owner_id==me.id;if(tab=="ana"&&!own)tab="ann";
+ app.innerHTML=`<a onclick="go('home')">← Mes groupes</a><h2>${esc(g.name)}</h2><p class="mu">${esc(g.description)} Code d’invitation : <b>${g.code}</b></p>
+<div class="tabs">${[["ann","Annonces"],["mem","Membres"],["cot","Cotisations"],...(own?[["ana","Analyse"]]:[])].map(([k,l])=>`<button class="${tab==k?"on":""}" onclick="tab='${k}';group()">${l}</button>`).join("")}</div><div id="t"></div>${own?`<button class="red" onclick="delG()">Supprimer le groupe</button>`:""}`;
+ await({ann,mem,cot,ana})[tab](g,own)}
+async function ann(g,own){const a=await run(sb.from("announcements").select("*").eq("group_id",gid).order("created_at",{ascending:false}));
+ $("#t").innerHTML=(own?`<input id="at" placeholder="Titre"><textarea id="ab" placeholder="Message"></textarea><button onclick="addA()">Publier l’annonce</button>`:"")+((a&&a!==true?a:[]).map(x=>`<div class="card"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><small class="mu">${new Date(x.created_at).toLocaleDateString("fr-FR")}</small> ${own?`<a class="del" onclick="delA('${x.id}')">Supprimer</a>`:""}</div>`).join("")||`<p class="mu">Aucune annonce.</p>`)}
+async function addA(){if(await run(sb.from("announcements").insert({group_id:gid,title:$("#at").value,body:$("#ab").value})))group()}
+async function delA(i){if(await run(sb.from("announcements").delete().eq("id",i)))group()}
+async function mem(g,own){const m=await run(sb.from("group_members").select("user_id,status,profiles(full_name,email)").eq("group_id",gid));
+ $("#t").innerHTML=(m&&m!==true?m:[]).map(x=>`<div class="row"><span>${esc(x.profiles?.full_name||x.profiles?.email)}${x.status=="pending"?" (demande)":""}</span>${own&&x.user_id!=g.owner_id?(x.status=="pending"?`<span><a onclick="setM('${x.user_id}')">Accepter</a> <a class="del" onclick="rmM('${x.user_id}')">Refuser</a></span>`:`<a class="del" onclick="rmM('${x.user_id}')">Retirer</a>`):""}</div>`).join("")}
+async function setM(u){if(await run(sb.from("group_members").update({status:"active",joined_at:new Date().toISOString()}).eq("group_id",gid).eq("user_id",u)))group()}
+async function rmM(u){if(await run(sb.from("group_members").delete().eq("group_id",gid).eq("user_id",u)))group()}
+async function cot(g,own){const[m,c]=await Promise.all([run(sb.from("group_members").select("user_id,profiles(full_name,email)").eq("group_id",gid).eq("status","active")),run(sb.from("contributions").select("*").eq("group_id",gid).eq("month",mo+"-01"))]);
+ const L=x=>Array.isArray(x)?x:[],by=Object.fromEntries(L(c).map(x=>[x.user_id,x]));
+ $("#t").innerHTML=`<input type="month" value="${mo}" onchange="mo=this.value;group()">${own?`<input id="am" type="number" placeholder="Montant de la cotisation (FCFA)" value="${L(c)[0]?.amount||""}">`:""}`+L(m).map(x=>{const p=by[x.user_id]?.paid;return`<div class="row"><span>${esc(x.profiles?.full_name||x.profiles?.email)}</span>${own?`<button class="${p?"ok":"alt"}" onclick="pay('${x.user_id}',${!p})">${p?"Payé":"Non payé"}</button>`:`<b>${p?"Payé":"Non payé"}</b>`}</div>`}).join("")}
+async function pay(u,p){if(await run(sb.from("contributions").upsert({group_id:gid,user_id:u,month:mo+"-01",amount:+$("#am").value||0,paid:p},{onConflict:"group_id,user_id,month"})))group()}
+function line(d,k,t){const mx=Math.max(1,...d.map(x=>+x[k])),p=d.map((x,i)=>`${i*300/(d.length-1)},${100-x[k]/mx*100}`).join(" ");
+ return`<div class="card"><b>${t}</b><svg viewBox="-5 -5 310 110" width="100%"><polyline points="${p}" fill="none" stroke="#d4a537" stroke-width="3"/></svg><div class="mu" style="display:flex;justify-content:space-between"><small>${d[0].r_month}</small><small>max ${mx}</small><small>${d.at(-1).r_month}</small></div></div>`}
+function stats(d,ks){if(!Array.isArray(d))return"";return ks.map(([k,t])=>line(d,k,t)).join("")+`<table><tr><th>Mois</th>${ks.map(k=>`<th>${k[1]}</th>`).join("")}</tr>${d.map(x=>`<tr><td>${x.r_month}</td>${ks.map(k=>`<td>${x[k[0]]}</td>`).join("")}</tr>`).join("")}</table>`}
+async function ana(){$("#t").innerHTML=stats(await run(sb.rpc("monthly_stats",{gid})),[["r_members","Nouveaux membres"],["r_paid","Cotisations payées (FCFA)"]])}
+async function delG(){if(!confirm("Supprimer définitivement ce groupe et ses données ?"))return;if(await run(sb.from("groups").delete().eq("id",gid)))go("home")}
+async function admin(){const[ad,gs,st]=await Promise.all([run(sb.from("profiles").select("*").neq("role","user")),run(sb.from("groups").select("id,name,code")),run(sb.rpc("monthly_stats",{gid:null}))]);const L=x=>Array.isArray(x)?x:[],M=me.role=="main_admin";
+ app.innerHTML=`<h2>Administration</h2><h3>Administrateurs</h3>${L(ad).map(a=>`<div class="row"><span>${esc(a.email)}</span>${a.role=="main_admin"?"<b>Principal</b>":M?`<a class="del" onclick="rmAd('${a.id}')">Retirer</a>`:"<span>Admin</span>"}</div>`).join("")}
+${M?`<input id="ae" type="email" placeholder="E-mail du nouvel administrateur"><button onclick="addAd()">Ajouter un administrateur</button><p class="mu">Sans compte, la personne devient admin dès son inscription.</p>`:""}
+<h3>Tous les groupes</h3>${L(gs).map(g=>`<div class="row"><span>${esc(g.name)}</span><a class="del" onclick="gid='${g.id}';delG()">Supprimer</a></div>`).join("")||`<p class="mu">Aucun groupe.</p>`}
+<h3>Analyse globale</h3>${stats(st,[["r_members","Nouveaux membres"],["r_groups","Groupes créés"],["r_paid","Cotisations payées (FCFA)"]])}`}
+async function addAd(){if(await run(sb.rpc("add_admin",{p_email:$("#ae").value})))admin()}
+async function rmAd(i){if(confirm("Retirer cet administrateur ?")&&await run(sb.rpc("remove_admin",{p_id:i})))admin()}
+let ip;addEventListener("beforeinstallprompt",e=>{e.preventDefault();ip=e;$("#inst").hidden=false});$("#inst").onclick=()=>ip&&ip.prompt();
+if(/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone)$("#ios").hidden=false;
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+document.title=CFG.name;$("#nm").textContent=CFG.name;boot();
+</script></body></html>
