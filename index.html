@@ -38,7 +38,7 @@ th,td{padding:8px;border-bottom:1px solid var(--ln);text-align:left}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 /* ===== RÉGLAGES (un seul endroit) ===== */
-const CFG={url:"https://fyqyzzgygsstmqvnasps.supabase.co",key:"sb_publishable_ex-1Mrg3qfgwAbaSeFwCQQ_3G2Uq8p4",name:"Lémou et Touty"};
+const CFG={url:"https://fyqyzzgygsstmqvnasps.supabase.co",key:"sb_publishable_ex-1Mrg3qfgwAbaSeFwCQQ_3G2Uq8p4",name:"Lémou et Touty",vapid:"BCkPa_Cx91QddcV3zW_9UffcVId7BuV_kOJRTlI-kTZp4ub3Dfkq-CkE6zJH06U34UyV0BYXbDHXWlR9JT2GyzM"};
 /* ====================================== */
 const sb=supabase.createClient(CFG.url,CFG.key),$=s=>document.querySelector(s),app=$("#app");
 let me=null,view="home",gid=null,tab="ann",mo=new Date().toISOString().slice(0,7);
@@ -59,7 +59,7 @@ async function profil(){const[u,p]=await Promise.all([sb.auth.getUser(),run(sb.r
  app.innerHTML=`<div style="text-align:center"><div class="avb">${ini(me.full_name)}</div><h2>${esc(me.full_name)}</h2><span class="pill">${me.role=="main_admin"?"Administrateur principal":me.role=="admin"?"Administrateur":"Membre actif"}</span></div>
 <h3>Mes informations</h3><input id="pf" placeholder="Prénom" value="${esc(q.first_name||nm[0])}"><input id="pl" placeholder="Nom" value="${esc(q.last_name||nm.slice(1).join(" "))}"><input id="pt" type="tel" placeholder="Téléphone (ex. +221 77 123 45 67)" value="${esc(q.phone)}"><button class="gold full" id="ps">Enregistrer</button>
 <h3>Adresse e-mail</h3><input id="pe" type="email" value="${esc(em)}"><button class="alt full" id="pm">Changer mon e-mail</button><p class="mu">Un e-mail de confirmation peut être envoyé à la nouvelle adresse.</p>
-<br><button class="alt full" style="border-color:var(--gold);color:var(--gold)" onclick="sb.auth.signOut().then(boot)">Se déconnecter</button>`;
+<h3>Notifications</h3><p class="mu">Reçois une alerte pour les annonces, la validation de ton groupe et ton rôle d’administrateur. Sur iPhone, installe d’abord l’app sur l’écran d’accueil.</p><button class="gold full" onclick="pushOn()">Activer les notifications</button><br><br><button class="alt full" style="border-color:var(--gold);color:var(--gold)" onclick="sb.auth.signOut().then(boot)">Se déconnecter</button>`;
  $("#ps").onclick=async()=>{if(await run(sb.rpc("update_profile",{p_first:$("#pf").value,p_last:$("#pl").value,p_phone:$("#pt").value}))){alert("Informations enregistrées.");boot()}};
  $("#pm").onclick=async()=>{const{error}=await sb.auth.updateUser({email:$("#pe").value.trim()});alert(error?error.message:"Demande envoyée. Vérifie ta boîte e-mail si une confirmation est demandée.")}}
 async function home(){const r=await run(sb.from("group_members").select("status,groups(id,name,description,owner_id,status)").eq("user_id",me.id));const gs=(Array.isArray(r)?r:[]).filter(m=>m.groups),ow=gs.filter(m=>m.groups.owner_id==me.id).length,pe=gs.filter(m=>m.status!="active"||m.groups.status!="approved").length,pr=(me.full_name||"").split(" ")[0];
@@ -79,10 +79,16 @@ async function group(){const g=await run(sb.from("groups").select("*").eq("id",g
 <div class="card"><div class="row" style="border:0;padding:0"><b>Progression du mois</b><span>${pd} / ${n} payés</span></div><div class="bar"><i style="width:${n?pd/n*100:0}%"></i></div></div>
 <div class="tabs">${[["cot","Cotisations"],["mem","Membres"],["ann","Annonces"],...(adm?[["ana","Analyse"]]:[])].map(([k,l])=>`<button class="${tab==k?"on":""}" onclick="tab='${k}';group()">${l}</button>`).join("")}</div><div id="t"></div>${adm?`<button class="red full" onclick="delG()">Supprimer le groupe</button>`:`<button class="alt full" style="margin-top:24px" onclick="leave()">Quitter le groupe</button>`}`;
  await({ann,mem,cot,ana})[tab](g,own)}
+const b64=t=>Uint8Array.from(atob(t.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
+async function pushOn(){if(!("serviceWorker"in navigator&&"PushManager"in window))return alert("Notifications indisponibles ici. Sur iPhone, installe d’abord l’app sur l’écran d’accueil.");
+ if(await Notification.requestPermission()!="granted")return alert("Notifications refusées. Autorise-les dans les réglages du navigateur.");
+ const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription()||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(CFG.vapid)}),j=sub.toJSON();
+ if(await run(sb.rpc("save_push",{p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth})))alert("Notifications activées ✅")}
+const notify=async(kind,ref)=>{try{const{data:{session}}=await sb.auth.getSession();await fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({kind,ref})})}catch(e){}};
 async function leave(){if(confirm("Quitter ce groupe ?")&&await run(sb.from("group_members").delete().eq("group_id",gid).eq("user_id",me.id)))go("home")}
 async function ann(g,own){const a=await run(sb.from("announcements").select("*").eq("group_id",gid).order("created_at",{ascending:false}));
  $("#t").innerHTML=(own?`<input id="at" placeholder="Titre"><textarea id="ab" placeholder="Message"></textarea><button onclick="addA()">Publier l’annonce</button>`:"")+((a&&a!==true?a:[]).map(x=>`<div class="card"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><small class="mu">${new Date(x.created_at).toLocaleDateString("fr-FR")}</small> ${own?`<a class="del" onclick="delA('${x.id}')">Supprimer</a>`:""}</div>`).join("")||`<p class="mu">Aucune annonce.</p>`)}
-async function addA(){if(await run(sb.from("announcements").insert({group_id:gid,title:$("#at").value,body:$("#ab").value})))group()}
+async function addA(){const r=await run(sb.from("announcements").insert({group_id:gid,title:$("#at").value,body:$("#ab").value}).select("id").single());if(r){if(r.id)notify("announcement",r.id);group()}}
 async function delA(i){if(await run(sb.from("announcements").delete().eq("id",i)))group()}
 async function mem(g,own){const m=await run(sb.from("group_members").select("user_id,status,profiles(full_name)").eq("group_id",gid)),adm=own||isA();
  $("#t").innerHTML=(Array.isArray(m)?m:[]).map(x=>`<div class="row"><span>${esc(x.profiles?.full_name||"Membre")}${x.status=="pending"?` <span class="pill w">demande</span>`:""}</span>${adm&&x.user_id!=g.owner_id?(x.status=="pending"?(own?`<span><a onclick="setM('${x.user_id}')">Accepter</a> <a class="del" onclick="rmM('${x.user_id}')">Refuser</a></span>`:""):`<a class="del" onclick="rmM('${x.user_id}')">Retirer</a>`):""}</div>`).join("")||`<p class="mu">Aucun membre.</p>`}
@@ -103,8 +109,8 @@ async function admin(){const[ad,gs,st]=await Promise.all([run(sb.rpc("admin_list
 ${M?`<input id="ae" type="email" placeholder="E-mail du nouvel administrateur"><button onclick="addAd()">Ajouter un administrateur</button><p class="mu">Sans compte, la personne devient admin dès son inscription.</p>`:""}
 <h3>Groupes validés</h3>${A.map(g=>`<div class="row"><a onclick="go('group','${g.id}')">${esc(g.name)}</a><a class="del" onclick="gid='${g.id}';delG()">Supprimer</a></div>`).join("")||`<p class="mu">Aucun groupe.</p>`}
 <h3>Analyse globale</h3>${stats(st,[["r_members","Nouveaux membres"],["r_groups","Groupes créés"],["r_paid","Cotisations payées (FCFA)"]])}`}
-async function okG(i){if(await run(sb.from("groups").update({status:"approved"}).eq("id",i)))admin()}
-async function addAd(){if(await run(sb.rpc("add_admin",{p_email:$("#ae").value})))admin()}
+async function okG(i){if(await run(sb.from("groups").update({status:"approved"}).eq("id",i))){notify("group_approved",i);admin()}}
+async function addAd(){const em=$("#ae").value.trim();if(await run(sb.rpc("add_admin",{p_email:em}))){notify("admin_added",em);admin()}}
 async function rmAd(i){if(confirm("Retirer cet administrateur ?")&&await run(sb.rpc("remove_admin",{p_id:i})))admin()}
 let ip;addEventListener("beforeinstallprompt",e=>{e.preventDefault();ip=e;$("#inst").hidden=false});$("#inst").onclick=()=>ip&&ip.prompt();
 if(/iphone|ipad/i.test(navigator.userAgent)&&!navigator.standalone)$("#ios").hidden=false;
