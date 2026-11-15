@@ -1,30 +1,38 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b1f4b"><link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b2a63"><link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Lémou et Touty</title>
 <style>
-:root{--bg:#0b1f4b;--gold:#d4a537;--ink:#14213d;--mu:#6b7280;--ln:#e8e4d8}
+:root{--nv:#0b2a63;--gold:#d49a2a;--ink:#15233f;--mu:#6b7280;--ln:#e6eaf2;--bl:#eef3fb}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{max-width:980px;margin:auto;padding:calc(env(safe-area-inset-top) + 16px) 20px 14px;display:flex;gap:14px;align-items:center;color:#fff}
-header b{font:700 24px Georgia,serif;color:var(--gold);flex:1}
-#ios{max-width:980px;margin:0 auto 8px;padding:0 20px;color:#fff;font-size:14px}
-main{background:#fff;border-radius:28px;max-width:980px;margin:0 auto 96px;padding:22px;min-height:60vh}
-h2{margin:.2em 0 .6em}h3{margin:1.4em 0 .5em}
-input,textarea{width:100%;padding:12px 14px;margin:0 0 10px;border:1px solid var(--ln);border-radius:14px;font:inherit}
-button{background:var(--bg);color:#fff;border:0;border-radius:14px;padding:12px 18px;font:inherit;cursor:pointer}
-button.alt{background:#eef0f6;color:var(--bg)}button.ok{background:var(--gold);color:var(--bg)}button.red{background:#b42318;margin-top:28px}
+body{margin:0;background:var(--nv);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{max-width:720px;margin:auto;padding:calc(env(safe-area-inset-top) + 14px) 18px 18px;display:flex;gap:12px;align-items:center;color:#fff}
+header b{font:700 22px Georgia,serif;color:#e8b84a;flex:1;line-height:1.1}
+#av{width:42px;height:42px;border-radius:50%;background:#e8b84a;color:var(--nv);display:grid;place-items:center;font-weight:700}#av:empty{display:none}
+#ios{max-width:720px;margin:0 auto 8px;padding:0 18px;color:#fff;font-size:14px}
+main{background:#fff;border-radius:30px 30px 0 0;max-width:720px;margin:0 auto;padding:22px 18px 110px;min-height:75vh}
+h2{margin:.2em 0}h3{margin:1.3em 0 .6em;font-size:18px}
+input,textarea{width:100%;padding:13px 15px;margin:0 0 10px;border:1px solid var(--ln);border-radius:16px;font:inherit;background:#fafbfd}
+button{background:var(--nv);color:#fff;border:0;border-radius:16px;padding:14px 18px;font:inherit;font-weight:600;cursor:pointer}
+button.full{width:100%}button.sm{padding:8px 14px;font-size:14px}
+button.alt{background:#fff;color:var(--nv);border:1.5px solid var(--nv)}button.gold{background:var(--gold)}
+button.ok{background:#e1f5ea;color:#1b8a4e}button.red{background:#b42318;margin-top:24px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.tile{background:var(--bl);border-radius:18px;padding:14px 6px;text-align:center}.tile b{display:block;font-size:22px}.tile small{color:var(--mu)}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid var(--ln)}
-.card{border:1px solid var(--ln);border-radius:18px;padding:14px;margin:12px 0}
-.mu{color:var(--mu)}a{color:var(--bg);font-weight:600;cursor:pointer}a.del{color:#b42318}
-.tabs{display:flex;gap:8px;overflow-x:auto;margin:14px 0}.tabs button{background:#eef0f6;color:var(--bg);white-space:nowrap}.tabs .on{background:var(--gold)}
+.card{border:1px solid var(--ln);border-radius:20px;padding:14px;margin:12px 0;box-shadow:0 2px 10px #0b2a6310}
+.pill{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:#e1f5ea;color:#1b8a4e}.pill.w{background:#fdf0d5;color:#9a6a10}
+.bar{height:10px;background:var(--ln);border-radius:9px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--nv);border-radius:9px}
+.avb{width:90px;height:90px;border-radius:50%;background:var(--nv);color:#e8b84a;display:grid;place-items:center;font:700 30px Georgia,serif;margin:8px auto}
+.mu{color:var(--mu)}a{color:var(--nv);font-weight:600;cursor:pointer}a.del{color:#b42318}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin:14px 0}.tabs button{background:var(--bl);color:var(--mu);padding:10px 16px;white-space:nowrap;border-radius:99px}.tabs .on{background:var(--nv);color:#fff}
 table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px;display:block;overflow-x:auto}
 th,td{padding:8px;border-bottom:1px solid var(--ln);text-align:left}
-#nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:#fff;padding:12px 0 calc(env(safe-area-inset-bottom) + 12px);border-top:1px solid var(--ln);z-index:5}
-@media(min-width:800px){#nav{position:static;background:none;border:0;padding:0;gap:18px}#nav a{color:#fff}}
-</style></head><body>
-<header><img src="logo-192.png" alt="" width="46" height="46" style="border-radius:50%"><b id="nm"></b><span id="who"></span><button id="inst" class="ok" hidden>Installer l’app</button><nav id="nav"></nav></header>
+#nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;background:#fff;padding:10px 0 calc(env(safe-area-inset-bottom) + 10px);box-shadow:0 -4px 18px #0b2a6322;border-radius:22px 22px 0 0;z-index:5}
+#nav a{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--mu);min-width:70px}#nav a.on{color:var(--nv)}#nav span{font-size:20px}
+</style></style></head><body>
+<header><img src="logo-192.png" alt="" width="42" height="42" style="border-radius:50%"><b id="nm"></b><button id="inst" class="gold sm" hidden>Installer</button><div id="av"></div></header><nav id="nav"></nav>
 <p id="ios" hidden>iPhone : ouvre dans Safari, touche « Partager », puis « Sur l’écran d’accueil ».</p>
 <main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -36,33 +44,42 @@ const sb=supabase.createClient(CFG.url,CFG.key),$=s=>document.querySelector(s),a
 let me=null,view="home",gid=null,tab="ann",mo=new Date().toISOString().slice(0,7);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const run=async p=>{const{data,error}=await p;if(error){alert(error.message);return null}return data??true};
-const isA=()=>me&&me.role!="user",go=(v,g)=>{view=v;if(g){gid=g;tab="ann"}render()};
+const isA=()=>me&&me.role!="user",go=(v,g)=>{view=v;if(g){gid=g;tab="cot"}render()};
 async function boot(){const{data:{session}}=await sb.auth.getSession();
- if(!session){me=null;$("#nav").innerHTML="";$("#who").textContent="";return authView()}
+ if(!session){me=null;$("#nav").innerHTML="";$("#av").textContent="";return authView()}
  me=await run(sb.from("profiles").select("id,full_name,role").eq("id",session.user.id).single());render()}
-function authView(){app.innerHTML=`<div style="text-align:center"><img src="logo-512.png" alt="" width="150" style="border-radius:50%"><h2>${CFG.name}</h2><p class="mu">Une famille, une force.</p></div><h3>Connexion</h3><input id="e" type="email" placeholder="E-mail"><input id="p" type="password" placeholder="Mot de passe"><button id="li">Se connecter</button><h3>Nouveau ici ?</h3><input id="pn" placeholder="Prénom"><input id="n" placeholder="Nom"><button class="alt" id="su">Créer un compte</button><p class="mu">Pour créer un compte : prénom, nom, e-mail et mot de passe.</p>`;
- $("#li").onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:$("#e").value,password:$("#p").value});error?alert(error.message):boot()};
- $("#su").onclick=async()=>{const f=$("#pn").value.trim(),l=$("#n").value.trim();if(!f||!l)return alert("Le prénom et le nom sont obligatoires.");const{error}=await sb.auth.signUp({email:$("#e").value,password:$("#p").value,options:{data:{first_name:f,last_name:l}}});error?alert(error.message):boot()}}
-function render(){if(!me)return;$("#who").textContent=(me.full_name||"")+(isA()?" · "+(me.role=="main_admin"?"Administrateur principal":"Administrateur"):"");
- $("#nav").innerHTML=`<a onclick="go('home')">Groupes</a>${isA()?`<a onclick="go('admin')">Administration</a>`:""}<a onclick="sb.auth.signOut().then(boot)">Déconnexion</a>`;
- ({home,group,admin})[view]()}
-async function home(){const gs=await run(sb.from("group_members").select("status,groups(id,name,owner_id,status)").eq("user_id",me.id))||[];
- app.innerHTML=`<h2>Mes groupes</h2>${(gs===true?[]:gs).filter(m=>m.groups).map(m=>`<div class="row" ${m.status=="active"&&m.groups.status=="approved"?`onclick="go('group','${m.groups.id}')"`:""}><b>${esc(m.groups.name)}</b><span class="mu">${m.groups.status!="approved"?"En attente de validation":m.status=="active"?(m.groups.owner_id==me.id?"Responsable":"Membre"):"Demande en attente"}</span></div>`).join("")||`<p class="mu">Aucun groupe. Crée le tien ou rejoins-en un avec un code.</p>`}
-<h3>Créer un groupe</h3><input id="gn" placeholder="Nom du groupe"><input id="gd" placeholder="Description"><button id="gc">Créer un groupe</button>
-<h3>Rejoindre un groupe</h3><input id="gk" placeholder="Code du groupe"><button class="alt" id="gj">Envoyer la demande</button>`;
+const ini=n=>(n||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+function authView(m){if(!m){app.innerHTML=`<div style="text-align:center;padding-top:8px"><img src="logo-512.png" alt="" width="190" style="border-radius:50%"><h2 style="font:700 28px Georgia,serif;color:var(--nv);margin-top:12px">${CFG.name}</h2><p class="mu">Une famille, une force.</p><p>Gestion de groupes, de membres et de cotisations en toute simplicité.</p></div><button class="full" onclick="authView('in')">Se connecter</button><br><br><button class="alt full" onclick="authView('up')">Créer un compte</button>`;return}
+ const up=m=="up";app.innerHTML=`<a onclick="authView()">← Retour</a><h2>${up?"Créer un compte":"Connexion"}</h2>${up?`<input id="pn" placeholder="Prénom"><input id="n" placeholder="Nom">`:""}<input id="e" type="email" placeholder="E-mail"><input id="p" type="password" placeholder="Mot de passe"><button class="full" id="go1">${up?"Créer un compte":"Se connecter"}</button>`;
+ $("#go1").onclick=async()=>{let r;if(up){const f=$("#pn").value.trim(),l=$("#n").value.trim();if(!f||!l)return alert("Le prénom et le nom sont obligatoires.");r=await sb.auth.signUp({email:$("#e").value,password:$("#p").value,options:{data:{first_name:f,last_name:l}}})}else r=await sb.auth.signInWithPassword({email:$("#e").value,password:$("#p").value});r.error?alert(r.error.message):boot()}}
+function render(){if(!me)return;$("#av").textContent=ini(me.full_name);
+ $("#nav").innerHTML=`<a class="${view=="home"||view=="group"?"on":""}" onclick="go('home')"><span>🏠</span>Accueil</a>${isA()?`<a class="${view=="admin"?"on":""}" onclick="go('admin')"><span>🛡️</span>Administration</a>`:""}<a class="${view=="profil"?"on":""}" onclick="go('profil')"><span>👤</span>Profil</a>`;
+ ({home,group,admin,profil})[view]()}
+function profil(){app.innerHTML=`<div style="text-align:center"><div class="avb">${ini(me.full_name)}</div><h2>${esc(me.full_name)}</h2><span class="pill">${me.role=="main_admin"?"Administrateur principal":me.role=="admin"?"Administrateur":"Membre actif"}</span></div><br><button class="alt full" style="border-color:var(--gold);color:var(--gold)" onclick="sb.auth.signOut().then(boot)">Se déconnecter</button>`}
+async function home(){const r=await run(sb.from("group_members").select("status,groups(id,name,description,owner_id,status)").eq("user_id",me.id));const gs=(Array.isArray(r)?r:[]).filter(m=>m.groups),ow=gs.filter(m=>m.groups.owner_id==me.id).length,pe=gs.filter(m=>m.status!="active"||m.groups.status!="approved").length,pr=(me.full_name||"").split(" ")[0];
+ app.innerHTML=`<h2>Bonjour, ${esc(pr)} 👋</h2><p class="mu" style="margin:0">Que souhaitez-vous faire aujourd’hui ?</p>
+<div class="tiles"><div class="tile"><b>${gs.length}</b><small>Groupes</small></div><div class="tile"><b>${ow}</b><small>Responsable</small></div><div class="tile"><b>${pe}</b><small>En attente</small></div></div>
+<h3>Mes groupes</h3>${gs.map(m=>{const g=m.groups,ok=m.status=="active"&&g.status=="approved";return`<div class="card" ${ok?`onclick="go('group','${g.id}')" style="cursor:pointer"`:""}><div class="row" style="border:0;padding:0"><b>${esc(g.name)}</b><span class="pill ${ok?"":"w"}">${g.status!="approved"?"En attente de validation":m.status!="active"?"Demande en attente":g.owner_id==me.id?"Responsable":"Membre"}</span></div><small class="mu">${esc(g.description)}</small></div>`}).join("")||`<p class="mu">Aucun groupe. Crée le tien ou rejoins-en un avec un code.</p>`}
+<h3>Créer un groupe</h3><input id="gn" placeholder="Nom du groupe"><input id="gd" placeholder="Description"><button class="gold full" id="gc">+ Créer un groupe</button>
+<h3>Rejoindre un groupe</h3><input id="gk" placeholder="Code du groupe"><button class="alt full" id="gj">Envoyer la demande</button>`;
  $("#gc").onclick=async()=>{const id=await run(sb.rpc("create_group",{p_name:$("#gn").value,p_desc:$("#gd").value}));if(id){if(isA())go("group",id);else{alert("Groupe envoyé. Il sera visible après validation par l’administrateur.");home()}}};
  $("#gj").onclick=async()=>{if(await run(sb.rpc("join_group",{p_code:$("#gk").value}))){alert("Demande envoyée au responsable.");home()}}}
 async function group(){const g=await run(sb.from("groups").select("*").eq("id",gid).single());if(!g)return go("home");
- const own=g.owner_id==me.id;if(tab=="ana"&&!own)tab="ann";
- app.innerHTML=`<a onclick="go('home')">← Mes groupes</a><h2>${esc(g.name)}</h2><p class="mu">${esc(g.description)} Code d’invitation : <b>${g.code}</b></p>
-<div class="tabs">${[["ann","Annonces"],["mem","Membres"],["cot","Cotisations"],...(own?[["ana","Analyse"]]:[])].map(([k,l])=>`<button class="${tab==k?"on":""}" onclick="tab='${k}';group()">${l}</button>`).join("")}</div><div id="t"></div>${own?`<button class="red" onclick="delG()">Supprimer le groupe</button>`:""}`;
+ const own=g.owner_id==me.id,adm=own||isA();if(tab=="ana"&&!adm)tab="cot";
+ const[ms,cs]=await Promise.all([run(sb.from("group_members").select("user_id").eq("group_id",gid).eq("status","active")),run(sb.from("contributions").select("amount,paid").eq("group_id",gid).eq("month",mo+"-01"))]);
+ const n=Array.isArray(ms)?ms.length:0,cl=Array.isArray(cs)?cs:[],pd=cl.filter(x=>x.paid).length,am=cl[0]?.amount||0;
+ app.innerHTML=`<a onclick="go('home')">← Retour</a><div style="text-align:center"><h2>${esc(g.name)}</h2><p class="mu" style="margin:0">${esc(g.description)}</p><p class="mu">Code d’invitation : <b>${g.code}</b></p></div>
+<div class="tiles"><div class="tile"><b>${n}</b><small>Membres</small></div><div class="tile"><b>${am}</b><small>FCFA / mois</small></div><div class="tile"><b>${pd}/${n}</b><small>Payés</small></div></div>
+<div class="card"><div class="row" style="border:0;padding:0"><b>Progression du mois</b><span>${pd} / ${n} payés</span></div><div class="bar"><i style="width:${n?pd/n*100:0}%"></i></div></div>
+<div class="tabs">${[["cot","Cotisations"],["mem","Membres"],["ann","Annonces"],...(adm?[["ana","Analyse"]]:[])].map(([k,l])=>`<button class="${tab==k?"on":""}" onclick="tab='${k}';group()">${l}</button>`).join("")}</div><div id="t"></div>${adm?`<button class="red full" onclick="delG()">Supprimer le groupe</button>`:`<button class="alt full" style="margin-top:24px" onclick="leave()">Quitter le groupe</button>`}`;
  await({ann,mem,cot,ana})[tab](g,own)}
+async function leave(){if(confirm("Quitter ce groupe ?")&&await run(sb.from("group_members").delete().eq("group_id",gid).eq("user_id",me.id)))go("home")}
 async function ann(g,own){const a=await run(sb.from("announcements").select("*").eq("group_id",gid).order("created_at",{ascending:false}));
  $("#t").innerHTML=(own?`<input id="at" placeholder="Titre"><textarea id="ab" placeholder="Message"></textarea><button onclick="addA()">Publier l’annonce</button>`:"")+((a&&a!==true?a:[]).map(x=>`<div class="card"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><small class="mu">${new Date(x.created_at).toLocaleDateString("fr-FR")}</small> ${own?`<a class="del" onclick="delA('${x.id}')">Supprimer</a>`:""}</div>`).join("")||`<p class="mu">Aucune annonce.</p>`)}
 async function addA(){if(await run(sb.from("announcements").insert({group_id:gid,title:$("#at").value,body:$("#ab").value})))group()}
 async function delA(i){if(await run(sb.from("announcements").delete().eq("id",i)))group()}
-async function mem(g,own){const m=await run(sb.from("group_members").select("user_id,status,profiles(full_name)").eq("group_id",gid));
- $("#t").innerHTML=(m&&m!==true?m:[]).map(x=>`<div class="row"><span>${esc(x.profiles?.full_name||"Membre")}${x.status=="pending"?" (demande)":""}</span>${own&&x.user_id!=g.owner_id?(x.status=="pending"?`<span><a onclick="setM('${x.user_id}')">Accepter</a> <a class="del" onclick="rmM('${x.user_id}')">Refuser</a></span>`:`<a class="del" onclick="rmM('${x.user_id}')">Retirer</a>`):""}</div>`).join("")}
+async function mem(g,own){const m=await run(sb.from("group_members").select("user_id,status,profiles(full_name)").eq("group_id",gid)),adm=own||isA();
+ $("#t").innerHTML=(Array.isArray(m)?m:[]).map(x=>`<div class="row"><span>${esc(x.profiles?.full_name||"Membre")}${x.status=="pending"?` <span class="pill w">demande</span>`:""}</span>${adm&&x.user_id!=g.owner_id?(x.status=="pending"?(own?`<span><a onclick="setM('${x.user_id}')">Accepter</a> <a class="del" onclick="rmM('${x.user_id}')">Refuser</a></span>`:""):`<a class="del" onclick="rmM('${x.user_id}')">Retirer</a>`):""}</div>`).join("")||`<p class="mu">Aucun membre.</p>`}
 async function setM(u){if(await run(sb.from("group_members").update({status:"active",joined_at:new Date().toISOString()}).eq("group_id",gid).eq("user_id",u)))group()}
 async function rmM(u){if(await run(sb.from("group_members").delete().eq("group_id",gid).eq("user_id",u)))group()}
 async function cot(g,own){const[m,c]=await Promise.all([run(sb.from("group_members").select("user_id,profiles(full_name)").eq("group_id",gid).eq("status","active")),run(sb.from("contributions").select("*").eq("group_id",gid).eq("month",mo+"-01"))]);
@@ -78,7 +95,7 @@ async function admin(){const[ad,gs,st]=await Promise.all([run(sb.rpc("admin_list
  app.innerHTML=`<h2>Administration</h2><h3>Groupes à valider (${P.length})</h3>${P.map(g=>`<div class="row"><span>${esc(g.name)}</span><span><a onclick="okG('${g.id}')">Valider</a> <a class="del" onclick="gid='${g.id}';delG()">Refuser</a></span></div>`).join("")||`<p class="mu">Aucun groupe en attente.</p>`}
 <h3>Administrateurs</h3>${L(ad).map(a=>`<div class="row"><span>${esc(a.email)}</span>${a.role=="main_admin"?"<b>Principal</b>":M?`<a class="del" onclick="rmAd('${a.id}')">Retirer</a>`:"<span>Admin</span>"}</div>`).join("")}
 ${M?`<input id="ae" type="email" placeholder="E-mail du nouvel administrateur"><button onclick="addAd()">Ajouter un administrateur</button><p class="mu">Sans compte, la personne devient admin dès son inscription.</p>`:""}
-<h3>Groupes validés</h3>${A.map(g=>`<div class="row"><span>${esc(g.name)}</span><a class="del" onclick="gid='${g.id}';delG()">Supprimer</a></div>`).join("")||`<p class="mu">Aucun groupe.</p>`}
+<h3>Groupes validés</h3>${A.map(g=>`<div class="row"><a onclick="go('group','${g.id}')">${esc(g.name)}</a><a class="del" onclick="gid='${g.id}';delG()">Supprimer</a></div>`).join("")||`<p class="mu">Aucun groupe.</p>`}
 <h3>Analyse globale</h3>${stats(st,[["r_members","Nouveaux membres"],["r_groups","Groupes créés"],["r_paid","Cotisations payées (FCFA)"]])}`}
 async function okG(i){if(await run(sb.from("groups").update({status:"approved"}).eq("id",i)))admin()}
 async function addAd(){if(await run(sb.rpc("add_admin",{p_email:$("#ae").value})))admin()}
